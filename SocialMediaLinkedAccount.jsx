@@ -1,153 +1,147 @@
 ﻿/* Social media JSX */
-import React from "react";
-import { ChildSingleInput } from "../Form/SingleInput.jsx";
+import React from 'react';
+import { ChildSingleInput } from '../Form/SingleInput.jsx';
+import { Popup } from 'semantic-ui-react';
 
 export default class SocialMediaLinkedAccount extends React.Component {
-  constructor(props) {
-    super(props);
+    constructor(props) {
+        super(props);
 
-    this.state = {
-      linkedAccounts: { linkedIn: "", github: "" },
-      showEditSection: false,
-    };
-    this.openEdit = this.openEdit.bind(this);
-    this.renderEdit = this.renderEdit.bind(this);
-    this.renderDisplay = this.renderDisplay.bind(this);
-    this.closeEdit = this.closeEdit.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.saveLinkedAccounts = this.saveLinkedAccounts.bind(this);
-    this.openLinkedIn = this.openLinkedIn.bind(this);
-    this.openGithub = this.openGithub.bind(this);
-  }
+        this.state = {
+            showEditSection: false,
+            validLinkedIn: true,
+            validGitHub: true
+        };
 
-  componentDidMount() {
-    $(".ui.button.social-media").popup();
-  }
-
-  openEdit() {
-    const newlinkedAccounts = Object.assign({}, this.props.linkedAccounts);
-    console.log(newlinkedAccounts);
-    this.setState({
-      showEditSection: true,
-      linkedAccounts: newlinkedAccounts,
-    });
-  }
-  closeEdit() {
-    this.setState({
-      showEditSection: false,
-    });
-  }
-  handleChange(event) {
-    const data = Object.assign({}, this.state.linkedAccounts);
-    console.log(data);
-    data[event.target.name] = event.target.value;
-    console.log(data);
-    this.setState({
-      linkedAccounts: data,
-    });
-  }
-
-  saveLinkedAccounts() {
-    if (
-      this.state.linkedAccounts.linkedIn === "" ||
-      this.state.linkedAccounts.github === ""
-    ) {
-      TalentUtil.notification.show(
-        "Please enter linkedIn and github accounts",
-        "error",
-        null,
-        null
-      );
-    } else {
-      console.log(this.state.linkedAccounts);
-      const data = Object.assign({}, this.state.linkedAccounts);
-      this.props.controlFunc(this.props.componentId, data);
-      //this.props.saveProfileData(data)
-      this.closeEdit();
+        this.openEdit = this.openEdit.bind(this);
+        this.closeEdit = this.closeEdit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.saveLinkedAccounts = this.saveLinkedAccounts.bind(this);
     }
-  }
-  openLinkedIn(event) {
-    event.preventDefault();
-    window.open(this.props.linkedAccounts.linkedIn, "_blank"); //to open new page
-  }
-  openGithub(event) {
-    event.preventDefault();
-    window.open(this.props.linkedAccounts.github, "_blank");
-  }
 
-  render() {
-    return this.state.showEditSection
-      ? this.renderEdit()
-      : this.renderDisplay();
-  }
+    componentDidMount() {
+        $('.ui.button.social-media')
+            .popup();
+    }
 
-  renderEdit() {
-    return (
-      <div className="ui sixteen wide column">
-        <ChildSingleInput
-          inputType="text"
-          label="LinkedIn"
-          name="linkedIn"
-          value={this.state.linkedAccounts.linkedIn || ""}
-          controlFunc={this.handleChange}
-          maxLength={80}
-          placeholder="Enter your LinkedIn Url"
-          errorMessage="Please enter a valid LinkedIn Url"
-        />
-        <ChildSingleInput
-          inputType="text"
-          label="GitHub"
-          name="github"
-          value={this.state.linkedAccounts.github || ""}
-          controlFunc={this.handleChange}
-          maxLength={80}
-          placeholder="Enter your GitHub Url"
-          errorMessage="Please enter a valid GitHub Url"
-        />
-        <button
-          type="button"
-          className="ui teal button"
-          onClick={this.saveLinkedAccounts}
-        >
-          Save
-        </button>
-        <button type="button" className="ui button" onClick={this.closeEdit}>
-          Cancel
-        </button>
-      </div>
-    );
-  }
+    openEdit() {
+        this.setState({ showEditSection: true });
+    }
 
-  renderDisplay() {
-    return (
-      <div className="row">
-        <div className="ui sixteen wide column">
-          <button
-            className="ui linkedin button"
-            style={{ width: "200px" }}
-            onClick={this.openLinkedIn}
-          >
-            <i aria-hidden="true" className="linkedin icon"></i>
-            LinkedIn
-          </button>
-          &nbsp;&nbsp;&nbsp;&nbsp;
-          <button
-            className="ui teal button"
-            style={{ width: "200px" }}
-            onClick={this.openGithub}
-          >
-            <i aria-hidden="true" className="github icon"></i>
-            GitHub
-          </button>
-          <button
-            type="button"
-            className="ui right floated secondary button"
-            onClick={this.openEdit}
-          >
-            Edit
-          </button>
-        </div>
-      </div>
-    );
-  }
+    closeEdit() {
+        this.setState({ showEditSection: false });
+    }
+
+    handleChange(event) {
+        let validLinkedIn = this.state.validLinkedIn;
+        let validGitHub = this.state.validGitHub;
+
+        switch (event.target.name) {
+            case 'linkedIn':
+                // A LinkedIn profile url must have between 3 and 100 letters or numbers. Taken from the site when you edit your custom URL.
+                // Accented characters are allowed which makes checking quite convoluted.
+                if (event.target.value && !/^https:\/\/(www.)?linkedin.com\/in\/.{3,100}\/?$/.test(event.target.value)) {
+                    validLinkedIn = false;
+                } else {
+                    validLinkedIn = true;
+                }
+
+                break;
+            case 'github':
+                // A GitHub profile url must have at least 1 alphanumeric character up to 39 maximum.
+                // Also allowed is single hyphens but not at the beginning or end.
+                // This RegExp will become quite large trying to follow the previous rule so we'll just allow hyphens anywhere.
+                if (event.target.value && !/^https:\/\/(www.)?github.com\/[a-zA-Z0-9\-]{1,39}\/?$/.test(event.target.value)) {
+                    validGitHub = false;
+                } else {
+                    validGitHub = true;
+                }
+
+                break;
+            default:
+                break;
+        }
+
+        // Update validation states so we can show errors.
+        this.setState({
+            validLinkedIn: validLinkedIn,
+            validGitHub: validGitHub
+        });
+
+        // We want linkedAccounts to be an innerobject just like how the AccountProfile state object has it.
+        const profileData = {
+            linkedAccounts: Object.assign({}, this.props.linkedAccounts)
+        };
+        profileData.linkedAccounts[event.target.name] = event.target.value;
+        this.props.updateProfileData(profileData);
+    }
+
+    saveLinkedAccounts() {
+        const validLinkedIn = this.state.validLinkedIn;
+        const validGitHub = this.state.validGitHub;
+
+        if (!validLinkedIn || !validGitHub) {
+            TalentUtil.notification.show("Please enter valid LinkedIn and GitHub URLs", "error", null, null);
+        } else {
+            // We want linkedAccounts to be an innerobject just like how the AccountProfile state object has it.
+            const profileData = {
+                linkedAccounts: Object.assign({}, this.props.linkedAccounts)
+            };
+            profileData.linkedAccounts[event.target.name] = event.target.value;
+            this.props.saveProfileData(profileData);
+            this.closeEdit();
+        }
+    }
+
+    render() {
+        return this.state.showEditSection ? this.renderEdit() : this.renderDisplay();
+    }
+
+    renderEdit() {
+        return (
+            <div className='ui sixteen wide column'>
+                <ChildSingleInput
+                    inputType="text"
+                    label="LinkedIn"
+                    name="linkedIn"
+                    value={this.props.linkedAccounts.linkedIn}
+                    controlFunc={this.handleChange}
+                    maxLength={80}
+                    placeholder="Enter your LinkedIn URL"
+                    isError={!this.state.validLinkedIn}
+                    errorMessage="Please enter a valid LinkedIn URL: https://www.linkedin.com/in/example"
+                />
+                <ChildSingleInput
+                    inputType="text"
+                    label="GitHub"
+                    name="github"
+                    value={this.props.linkedAccounts.github}
+                    controlFunc={this.handleChange}
+                    maxLength={80}
+                    placeholder="Enter your GitHub URL"
+                    isError={!this.state.validGitHub}
+                    errorMessage="Please enter a valid GitHub URL: https://www.github.com/example"
+                />
+
+                <button type="button" className="ui teal button" onClick={this.saveLinkedAccounts}>Save</button>
+                <button type='button' className='ui button' onClick={this.closeEdit}>Cancel</button>
+            </div>
+        );
+    }
+
+    renderDisplay() {
+        return (
+            <div className='ui sixteen wide column'>
+                <a className='ui linkedin button' href={this.props.linkedAccounts.linkedIn} >
+                    <i className='icon linkedin' /> LinkedIn
+                </a>
+                <a className='ui black button' href={this.props.linkedAccounts.github} >
+                    <i className='icon github' /> GitHub
+                </a>
+                <button type='button' className='ui right floated black button' onClick={this.openEdit}>
+                    Edit
+                </button>
+            </div>
+        );
+    }
 }

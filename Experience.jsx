@@ -1,375 +1,469 @@
 ﻿/* Experience section */
-import React, { useLayoutEffect } from "react";
-import Cookies from "js-cookie";
-import { Button, Table, Icon, Tab } from "semantic-ui-react";
-import moment from "moment";
-import nextId from "react-id-generator";
-
-const initialExperience = {
-  id: nextId(),
-  company: "",
-  position: "",
-  responsibilities: "",
-  start: "",
-  end: "",
-};
+import React from 'react';
+import Cookies from 'js-cookie';
+import { ChildSingleInput } from '../Form/SingleInput.jsx';
+import { ItemSlide } from '../Form/ItemSlide.jsx';
+import PropTypes from 'prop-types';
+import { Popup } from 'semantic-ui-react';
 
 export default class Experience extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      experience: initialExperience,
-      showAddSection: false,
-      //showeditExperience:false,
-      tableEditId: "",
-      showTableData: true,
-    };
-    this.handleAddClick = this.handleAddClick.bind(this);
-    this.renderAdd = this.renderAdd.bind(this);
-    this.handleChange = this.handleChange.bind(this);
+    constructor(props) {
+        super(props);
 
-    this.savenewExperience = this.savenewExperience.bind(this);
+        this.state = {
+            showAddSection: false,
+            showAddForm: false,
+            newExperience: {
+                company: '',
+                position: '',
+                responsibilities: '',
+                start: '',
+                end: ''
+            }
+        };
 
-    this.closeEdit = this.closeEdit.bind(this);
-    this.closeEditTable = this.closeEditTable.bind(this);
-    this.editRecord = this.editRecord.bind(this);
-    this.closeRecord = this.closeRecord.bind(this);
-  }
-  handleAddClick() {
-    this.setState({
-      showAddSection: true,
-    });
-  }
-  handleChange(event) {
-    event.preventDefault();
-    const id = event.target.id;
-    var data = this.state.experience;
-    data[id] = event.target.value;
-    this.setState({
-      experience: data,
-    });
-    /*var data = this.state.experience
-        data[event.target.name] = event.target.value
-        data[id] = event.target.value
-        this.setState({
-            experience: data
-        })*/
-  }
-
-  closeEdit() {
-    this.setState({ showAddSection: false });
-  }
-  closeEditTable() {
-    this.setState({ showTableData: true });
-  }
-  editRecord(event) {
-    var selectedId = event.target.id;
-    this.setState({ showTableData: false, tableEditId: selectedId });
-  }
-  closeRecord(event) {
-    event.preventDefault();
-    var id = event.target.id;
-    var deleteExp = this.props.experienceData;
-    deleteExp = deleteExp.filter((item) => id !== item.id);
-    var updateData = {
-      experience: [...deleteExp],
-    };
-    this.props.updateProfileData(updateData);
-    this.setState({ showTableData: true });
-  }
-
-  savenewExperience(event) {
-    event.preventDefault();
-    if (
-      this.state.experience.company === "" ||
-      this.state.experience.position === "" ||
-      this.state.experience.responsibilities === "" ||
-      this.state.experience.start === "" ||
-      this.state.experience.end === ""
-    ) {
-      TalentUtil.notification.show(
-        "Please enter required fields",
-        "error",
-        null,
-        null
-      );
-    } else {
-      var arr = [this.state.experience];
-      var data = [...arr, ...this.props.experienceData];
-      var updateData = {
-        experience: [...data],
-      };
-      this.props.updateProfileData(updateData);
-      this.setState({
-        showAddSection: false,
-        experience: {
-          id: "",
-          company: "",
-          position: "",
-          start: "",
-          end: "",
-          responsibilities: "",
-        },
-      });
+        this.openAdd = this.openAdd.bind(this);
+        this.closeAdd = this.closeAdd.bind(this);
+        this.hideAdd = this.hideAdd.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.editExperience = this.editExperience.bind(this);
+        this.deleteExperience = this.deleteExperience.bind(this);
+        this.saveExperience = this.saveExperience.bind(this);
     }
-  }
-  renderAdd() {
-    return (
-      <div className="row">
-        <div className="ui eight wide column" id="inputExperience">
-          <h5>Company:</h5>
-          <input
-            type="text"
-            id="company"
-            name="company"
-            placeholder="Company"
-            onChange={this.handleChange}
-            maxLength={12}
-          />
-        </div>
-        <div className="ui eight wide column">
-          <h5>Position:</h5>
-          <input
-            type="text"
-            name="position"
-            id="position"
-            onChange={this.handleChange}
-            maxLength={50}
-            placeholder="Position"
-          />
-        </div>
-        <div className="ui eight wide column" style={{ marginTop: "10px" }}>
-          <h5>Start Date:</h5>
-          <input
-            type="date"
-            name="start"
-            id="start"
-            onChange={this.handleChange}
-            placeholder="Start Date"
-          />
-        </div>
-        <div className="ui eight wide column" style={{ marginTop: "10px" }}>
-          <h5>End Date:</h5>
-          <input
-            type="date"
-            name="end"
-            id="end"
-            onChange={this.handleChange}
-            placeholder="End Date"
-          />
-        </div>
-        <div className="ui sixteen wide column" style={{ marginTop: "10px" }}>
-          <h5>Responsibilities:</h5>
-          <input
-            type="text"
-            name="responsibilities"
-            id="responsibilities"
-            onChange={this.handleChange}
-            maxLength={500}
-            placeholder="Responsibilities"
-          />
-        </div>
-        <div className="ui six wide column" style={{ marginTop: "10px" }}>
-          <Button secondary onClick={this.savenewExperience}>
-            Add
-          </Button>
-          <Button onClick={this.closeEdit}>Cancel</Button>
-        </div>
-      </div>
-    );
-  }
-  closeEdit() {
-    this.setState({ showAddSection: false });
-  }
-  handleUpdate(index, company, position, start, end, responsibilities, e) {
-    e.preventDefault();
-    var dataList = this.props.experienceData;
-    //debugger
-    const list = dataList.map((item, j) => {
-      if (j === index) {
-        item.company = this.state.experience.company
-          ? this.state.experience.company
-          : company;
-        item.position = this.state.experience.position
-          ? this.state.experience.position
-          : position;
-        item.start = this.state.experience.start
-          ? this.state.experience.start
-          : start;
-        item.end = this.state.experience.end ? this.state.experience.end : end;
-        item.responsibilities = this.state.experience.responsibilities
-          ? this.state.experience.responsibilities
-          : responsibilities;
-        return item;
-      } else {
-        return item;
-      }
-    });
-    this.props.updateProfileData(list);
-    this.setState({ showTableData: true });
-  }
 
-  render() {
-    const addExperience = this.state.showAddSection ? this.renderAdd() : "";
+    openAdd() {
+        this.setState({
+            showAddSection: true,
+            showAddForm: true
+        });
+    }
+
+    closeAdd() {
+        // Also reset newExperience to defaults so it's ready for future adds.
+        this.setState({
+            showAddForm: false,
+            newExperience: {
+                company: '',
+                position: '',
+                responsibilities: '',
+                start: '',
+                end: ''
+            }
+        });
+    }
+
+    hideAdd() {
+        this.setState({
+            showAddSection: false
+        });
+    }
+
+    handleChange(event) {
+        const experience = Object.assign({}, this.state.newExperience);
+        experience[event.target.name] = event.target.value;
+
+        this.setState({ newExperience: experience });
+    }
+
+    editExperience(experience) {
+        const editedExperience = this.props.experienceData.map(value => {
+            if (value.id === experience.id) {
+                return experience;
+            } else {
+                return value;
+            }
+        });
+
+        const profileData = {
+            experience: editedExperience
+        };
+
+        this.props.updateProfileData(profileData);
+    }
+
+    deleteExperience(experience) {
+        const editedExperience = this.props.experienceData.filter(value => {
+            return value.id !== experience.id;
+        });
+
+        const profileData = {
+            experience: editedExperience
+        };
+
+        this.props.updateProfileData(profileData);
+    }
+
+    saveExperience() {
+        const profileData = {
+            experience: [...this.props.experienceData, this.state.newExperience]
+        };
+
+        this.props.updateProfileData(profileData, true);
+        this.closeAdd();
+    }
+
+    render() {
+        return (
+            <React.Fragment>
+                {this.state.showAddSection && (
+                    <ItemSlide isOpen={this.state.showAddForm} slideIn duration={'500ms'} onClose={this.hideAdd} >
+                        <div className='ui row-padded'>
+                            <ExperienceAddForm
+                                company={this.state.newExperience.company}
+                                position={this.state.newExperience.position}
+                                responsibilities={this.state.newExperience.responsibilities}
+                                start={this.state.newExperience.start}
+                                end={this.state.newExperience.end}
+                                controlFunc={this.handleChange}
+                                save={this.saveExperience}
+                                cancel={this.closeAdd}
+                            />
+                        </div>
+                    </ItemSlide>
+                )}
+                <div className='ui sixteen wide column'>
+                    <table className='ui fixed table'>
+                        <thead>
+                            <tr>
+                                <th>
+                                    Company
+                                </th>
+                                <th>
+                                    Position
+                                </th>
+                                <th>
+                                    Responsibilities
+                                </th>
+                                <th>
+                                    Start
+                                </th>
+                                <th>
+                                    End
+                                </th>
+                                <th>
+                                    <button type='button' className='ui right floated button' onClick={this.openAdd}>
+                                        <i className='icon add' /> Add New
+                                </button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {this.props.experienceData.map(experience =>
+                                <ExperienceItem
+                                    key={experience.id}
+                                    experienceData={experience}
+                                    updateExperience={this.editExperience}
+                                    deleteExperience={this.deleteExperience}
+                                />
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </React.Fragment>
+        );
+    }
+}
+
+class ExperienceItem extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            showEditForm: false,
+            company: '',
+            position: '',
+            responsibilities: '',
+            start: '',
+            end: ''
+        }
+
+        this.openEdit = this.openEdit.bind(this);
+        this.closeEdit = this.closeEdit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.saveEdit = this.saveEdit.bind(this);
+        this.deleteExperience = this.deleteExperience.bind(this);
+    }
+
+    openEdit() {
+        // Take only the date portion from the UTC date.
+        const startDate = this.props.experienceData.start.slice(0, 10);
+        const endDate = this.props.experienceData.end.slice(0, 10);
+
+        this.setState({
+            showEditForm: true,
+            company: this.props.experienceData.company,
+            position: this.props.experienceData.position,
+            responsibilities: this.props.experienceData.responsibilities,
+            start: startDate,
+            end: endDate
+        });
+    }
+
+    closeEdit() {
+        this.setState({
+            showEditForm: false
+        });
+    }
+
+    handleChange(event) {
+        this.setState({ [event.target.name]: event.target.value });
+    }
+
+    saveEdit() {
+        const experience = {
+            id: this.props.experienceData.id,
+            company: this.state.company,
+            position: this.state.position,
+            responsibilities: this.state.responsibilities,
+            start: this.state.start,
+            end: this.state.end
+        };
+
+        this.props.updateExperience(experience);
+
+        this.closeEdit();
+    }
+
+    deleteExperience() {
+        let experience = Object.assign({}, this.props.experienceData);
+
+        this.props.deleteExperience(experience);
+
+        this.closeEdit();
+    }
+
+    render() {
+        return this.state.showEditForm ? this.renderEdit() : this.renderDisplay();
+    }
+
+    renderEdit() {
+        return (
+            <tr>
+                <td colSpan='6'>
+                    <ExperienceEditForm
+                        company={this.state.company}
+                        position={this.state.position}
+                        responsibilities={this.state.responsibilities}
+                        start={this.state.start}
+                        end={this.state.end}
+                        controlFunc={this.handleChange}
+                        save={this.saveEdit}
+                        cancel={this.closeEdit}
+                    />
+                </td>
+            </tr>
+        );
+    }
+
+    renderDisplay() {
+        const start = TalentUtil.formatHelpers.formatDateWritten(this.props.experienceData.start);
+        const end = TalentUtil.formatHelpers.formatDateWritten(this.props.experienceData.end);
+
+        return (
+            <tr>
+                <td>{this.props.experienceData.company}</td>
+                <td>{this.props.experienceData.position}</td>
+                <td>{this.props.experienceData.responsibilities}</td>
+                <td>{start}</td>
+                <td>{end}</td>
+                <td className='right aligned'>
+                    <i className='icon write' onClick={this.openEdit} />
+                    <Popup
+                        trigger={<i className='icon delete' />}
+                        content={<button type='button' className='ui negative button' onClick={this.deleteExperience}>Delete</button>}
+                        on='click'
+                        position='top center'
+                    />
+                </td>
+            </tr>
+        );
+    }
+}
+
+ExperienceItem.propTypes = {
+    experienceData: PropTypes.shape({
+        id: PropTypes.string,
+        company: PropTypes.string,
+        position: PropTypes.string,
+        responsibilities: PropTypes.string,
+        start: PropTypes.string,
+        end: PropTypes.string
+    }).isRequired,
+    updateExperience: PropTypes.func.isRequired
+};
+
+function ExperienceAddForm(props) {
+    const startDate = new Date(props.start);
+    const endDate = new Date(props.end);
+    const endDateTooEarly = startDate > endDate;
 
     return (
-      <React.Fragment>
-        {addExperience}
-        <div className="ui sixteen wide column">
-          <Table unstackable>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Company</Table.HeaderCell>
-                <Table.HeaderCell>Position</Table.HeaderCell>
-                <Table.HeaderCell>Responsibilities</Table.HeaderCell>
-                <Table.HeaderCell>Start</Table.HeaderCell>
-                <Table.HeaderCell>End</Table.HeaderCell>
-                <Table.HeaderCell textAlign="right">
-                  <button
-                    type="button"
-                    className="ui secondary button"
-                    onClick={this.handleAddClick}
-                  >
-                    <Icon name="plus" />
-                    Add New
-                  </button>
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {this.props.experienceData.map((expList, index) =>
-                !this.state.showTableData &&
-                this.state.tableEditId == expList.id ? (
-                  <React.Fragment key={expList.id}>
-                    <Table.Row>
-                      <Table.Cell colSpan="3" style={{ border: "none" }}>
-                        <h5>Company:</h5>
-                        <input
-                          type="text"
-                          name="company"
-                          placeholder="Company"
-                          maxLength={80}
-                          onChange={this.handleChange}
-                          id="company"
-                          defaultValue={expList.company}
-                        />
-                      </Table.Cell>
-                      <Table.Cell colSpan="3" style={{ border: "none" }}>
-                        <h5>Position:</h5>
-                        <input
-                          type="text"
-                          name="position"
-                          placeholder="Position"
-                          maxLength={50}
-                          onChange={this.handleChange}
-                          id="position"
-                          defaultValue={expList.position}
-                        />
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell colSpan="3" style={{ border: "none" }}>
-                        <h5>Start Date:</h5>
-                        <div className="ui calendar">
-                          <input
-                            type="date"
-                            name="start"
-                            defaultValue={moment(expList.start).format(
-                              "YYYY-MM-DD"
-                            )}
-                            onChange={this.handleChange}
-                            id="start"
-                          />
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell colSpan="3" style={{ border: "none" }}>
-                        <h5>End Date:</h5>
-                        <div className="ui calendar">
-                          <input
-                            type="date"
-                            name="end"
-                            defaultValue={moment(expList.end).format(
-                              "YYYY-MM-DD"
-                            )}
-                            onChange={this.handleChange}
-                            id="end"
-                          />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell colSpan="6" style={{ border: "none" }}>
-                        <h5>Responsibilities:</h5>
-                        <input
-                          type="text"
-                          name="responsibilities"
-                          placeholder="Responsibilities"
-                          maxLength={100}
-                          onChange={this.handleChange}
-                          id="responsibilities"
-                          defaultValue={expList.responsibilities}
-                        />
-                      </Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                      <Table.Cell colSpan="6" style={{ border: "none" }}>
-                        <button
-                          type="button"
-                          className="ui teal button"
-                          onClick={(e) =>
-                            this.handleUpdate(
-                              index,
-                              expList.company,
-                              expList.position,
-                              expList.start,
-                              expList.end,
-                              expList.responsibilities,
-                              e
-                            )
-                          }
-                        >
-                          Update
-                        </button>
-                        <button
-                          type="button"
-                          className="ui button"
-                          onClick={this.closeEditTable}
-                        >
-                          Cancel
-                        </button>
-                      </Table.Cell>
-                    </Table.Row>
-                  </React.Fragment>
-                ) : (
-                  <Table.Row key={expList.id}>
-                    <Table.Cell>{expList.company}</Table.Cell>
-                    <Table.Cell>{expList.position}</Table.Cell>
-                    <Table.Cell>{expList.responsibilities}</Table.Cell>
-                    <Table.Cell>
-                      {moment(expList.start).format("Do MMM, YYYY")}
-                    </Table.Cell>
-                    <Table.Cell>
-                      {moment(expList.end).format("Do MMM, YYYY")}
-                    </Table.Cell>
-                    <Table.Cell textAlign="right">
-                      <Icon
-                        name="pencil"
-                        id={expList.id}
-                        onClick={this.editRecord}
-                      />
-                      <Icon
-                        name="close"
-                        id={expList.id}
-                        onClick={this.closeRecord}
-                      />
-                    </Table.Cell>
-                  </Table.Row>
-                )
-              )}
-            </Table.Body>
-          </Table>
+        <div className='ui grid'>
+            <div className='ui row'>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Company:'
+                        inputType='text'
+                        placeholder='Company'
+                        name='company'
+                        value={props.company}
+                        maxLength={80}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid company'
+                        isError={false}
+                    />
+                </div>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Position:'
+                        inputType='text'
+                        placeholder='Position'
+                        name='position'
+                        value={props.position}
+                        maxLength={80}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid position'
+                        isError={false}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Start Date:'
+                        inputType='date'
+                        name='start'
+                        value={props.start}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid start date'
+                        isError={false}
+                    />
+                </div>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='End Date:'
+                        inputType='date'
+                        name='end'
+                        value={props.end}
+                        controlFunc={props.controlFunc}
+                        errorMessage='End date is earlier than start date'
+                        isError={endDateTooEarly}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui sixteen wide column'>
+                    <ChildSingleInput
+                        label='Responsibilities:'
+                        inputType='text'
+                        placeholder='Responsibilities'
+                        name='responsibilities'
+                        value={props.responsibilities}
+                        maxLength={500}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter valid responsibiltiies'
+                        isError={false}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui sixteen wide column'>
+                    <button type='button' className='ui teal button' onClick={props.save}>
+                        Add
+                </button>
+                    <button type='button' className='ui button' onClick={props.cancel}>
+                        Cancel
+                </button>
+                </div>
+            </div>
         </div>
-      </React.Fragment>
     );
-  }
+}
+
+function ExperienceEditForm(props) {
+    const startDate = new Date(props.start);
+    const endDate = new Date(props.end);
+    const endDateTooEarly = startDate > endDate;
+
+    return (
+        <div className='ui grid'>
+            <div className='ui row'>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Company'
+                        inputType='text'
+                        placeholder='Company'
+                        name='company'
+                        value={props.company}
+                        maxLength={80}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid company'
+                        isError={false}
+                    />
+                </div>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Position'
+                        inputType='text'
+                        placeholder='Position'
+                        name='position'
+                        value={props.position}
+                        maxLength={80}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid position'
+                        isError={false}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='Start Date:'
+                        inputType='date'
+                        name='start'
+                        value={props.start}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter a valid start date'
+                        isError={false}
+                    />
+                </div>
+                <div className='ui eight wide column'>
+                    <ChildSingleInput
+                        label='End Date:'
+                        inputType='date'
+                        name='end'
+                        value={props.end}
+                        controlFunc={props.controlFunc}
+                        errorMessage='End date is earlier than start date'
+                        isError={endDateTooEarly}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui sixteen wide column'>
+                    <ChildSingleInput
+                        label='Responsibilities'
+                        inputType='text'
+                        placeholder='Responsibilities'
+                        name='responsibilities'
+                        value={props.responsibilities}
+                        maxLength={500}
+                        controlFunc={props.controlFunc}
+                        errorMessage='Please enter valid responsibiltiies'
+                        isError={false}
+                    />
+                </div>
+            </div>
+            <div className='ui row'>
+                <div className='ui sixteen wide column'>
+                    <button type='button' className='ui teal button' onClick={props.save}>
+                        Update
+                                </button>
+                    <button type='button' className='ui button' onClick={props.cancel}>
+                        Cancel
+                                </button>
+                </div>
+            </div>
+        </div>
+    );
 }
