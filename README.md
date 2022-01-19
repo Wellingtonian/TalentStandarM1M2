@@ -1,3 +1,3 @@
 # TalentStandarM1M2
-Talent Practice
-My work and code in Talent project.
+Talent is a recruitment web app connecting recruiters and candidates.
+These are the files I worked in the Talent project.
